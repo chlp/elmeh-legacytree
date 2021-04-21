@@ -130,7 +130,7 @@ function dTree(objName) {
 
 	this.aNodes = [];
 
-	this.aIndent = [];
+	this.aNodesMap = [];
 
 	this.root = new Node(-1);
 
@@ -148,7 +148,9 @@ function dTree(objName) {
 
 dTree.prototype.add = function(id, pid, name, url, title, target, icon, iconOpen, open) {
 
-	this.aNodes[this.aNodes.length] = new Node(id, pid, name, url, title, target, icon, iconOpen, open);
+	let node = new Node(id, pid, name, url, title, target, icon, iconOpen, open);
+	this.aNodes[this.aNodes.length] = node;
+	this.aNodesMap[node.id] = node;
 
 };
 
@@ -172,19 +174,16 @@ dTree.prototype.closeAll = function() {
 
 // Outputs the tree to the page
 
-dTree.prototype.toString = function() {
+dTree.prototype.draw = function(domNode) {
 
-	var str = '<div class="dtree">\n';
-
-	if (document.getElementById) {
-
-		if (this.config.useCookies) this.selectedNode = this.getSelected();
-
-		str += this.addNode(this.root);
-
-	} else str += 'Browser not supported.';
-
+	var str = '<div class="dtree" id="dtree-top">\n';
+	if (this.config.useCookies) this.selectedNode = this.getSelected();
 	str += '</div>';
+
+
+	domNode.innerHTML = str;
+
+	str += this.addNode(this.root, document.getElementById('dtree-top'));
 
 	if (!this.selectedFound) this.selectedNode = null;
 
@@ -194,13 +193,9 @@ dTree.prototype.toString = function() {
 
 };
 
-
-
 // Creates the tree structure
 
-dTree.prototype.addNode = function(pNode) {
-
-	var str = '';
+dTree.prototype.addNode = function(pNode, domNode) {
 
 	var n=0;
 
@@ -234,7 +229,19 @@ dTree.prototype.addNode = function(pNode) {
 
 			}
 
-			str += this.node(cn, n);
+			let newNode = this.node(cn, n);
+			domNode.appendChild(createElementFromHTML(newNode));
+			
+			let node = cn;
+			let nodeId = n;
+			if (node._hc) {
+				newNode = '<div id="d' + this.obj + nodeId + '" class="clip" style="display:' + ((this.root.id == node.pid || node._io) ? 'block' : 'none') + ';"></div>';
+				domNode.appendChild(createElementFromHTML(newNode));
+
+			setTimeout(()=>{
+				this.addNode(node, document.getElementById('d' + this.obj + nodeId));
+				}, 20);
+			}
 
 			if (cn._ls) break;
 
@@ -242,10 +249,15 @@ dTree.prototype.addNode = function(pNode) {
 
 	}
 
-	return str;
-
 };
 
+function createElementFromHTML(htmlString) {
+  var div = document.createElement('div');
+  div.innerHTML = htmlString.trim();
+
+  // Change this to div.childNodes to support multiple top-level nodes
+  return div.firstChild; 
+}
 
 
 // Creates the node icon, url and text
@@ -300,54 +312,47 @@ dTree.prototype.node = function(node, nodeId) {
 
 	str += '</div>';
 
-	if (node._hc) {
-
-		str += '<div id="d' + this.obj + nodeId + '" class="clip" style="display:' + ((this.root.id == node.pid || node._io) ? 'block' : 'none') + ';">';
-
-		str += this.addNode(node);
-
-		str += '</div>';
-
-	}
-
-	this.aIndent.pop();
-
 	return str;
 
 };
 
 
+dTree.prototype.calcIndent = function(node) {
+	// node=d.aNodesMap[21932];
+	indent=[];
+	tmp=node;
+	while(tmp.pid !== -1) {
+	  indent.push(1);
+	  tmp = d.aNodesMap[tmp.pid];
+	}
+	return indent;
+}
 
 // Adds the empty and line icons
 
 dTree.prototype.indent = function(node, nodeId) {
-
 	var str = '';
-
 	if (this.root.id != node.pid) {
-
-		for (var n=0; n<this.aIndent.length; n++)
-
-			str += '<img src="' + ( (this.aIndent[n] == 1 && this.config.useLines) ? this.icon.line : this.icon.empty ) + '" alt="" />';
-
-		(node._ls) ? this.aIndent.push(0) : this.aIndent.push(1);
-
+		var curIndent = this.calcIndent(node);
+		for (var n=0; n<curIndent.length; n++) {
+			str += '<img src="' + ( (curIndent[n] == 1 && this.config.useLines) ? this.icon.line : this.icon.empty ) + '" alt="" />';
+		}
 		if (node._hc) {
-
 			str += '<a href="javascript: ' + this.obj + '.o(' + nodeId + ');"><img id="j' + this.obj + nodeId + '" src="';
-
-			if (!this.config.useLines) str += (node._io) ? this.icon.nlMinus : this.icon.nlPlus;
-
-			else str += ( (node._io) ? ((node._ls && this.config.useLines) ? this.icon.minusBottom : this.icon.minus) : ((node._ls && this.config.useLines) ? this.icon.plusBottom : this.icon.plus ) );
+			
+			if (!this.config.useLines) {
+				str += (node._io) ? this.icon.nlMinus : this.icon.nlPlus;
+			} else {
+				str += ( (node._io) ? ((node._ls && this.config.useLines) ? this.icon.minusBottom : this.icon.minus) : ((node._ls && this.config.useLines) ? this.icon.plusBottom : this.icon.plus ) );
+			}
 
 			str += '" alt="" /></a>';
-
-		} else str += '<img src="' + ( (this.config.useLines) ? ((node._ls) ? this.icon.joinBottom : this.icon.join ) : this.icon.empty) + '" alt="" />';
-
+		} else {
+			str += '<img src="' + ( (this.config.useLines) ? ((node._ls) ? this.icon.joinBottom : this.icon.join ) : this.icon.empty) + '" alt="" />';
+		}
 	}
 
 	return str;
-
 };
 
 

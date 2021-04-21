@@ -4,23 +4,23 @@
 </head><body>
 
 <script type="text/javascript">
-console.time('a')
-document.write("<div class=dtree>");
+console.time('a');
+document.write("<div id='dtree-top1' class=dtree>");
 d = new dTree('d');
 d.add(4821,-1,'Продукция');
-i=0;
-while(i<key.length)	{
-if(links[i]=="0")   m=key[i]+","+parents[i]+",'"+names[i]+"',''"; else m=key[i]+","+parents[i]+",'"+names[i]+"','items.php?id="+id[i]+"'";
-
-eval("d.add("+m+");");
-i++;
-					}
-console.timeLog('a')
-
-document.write(d);
-console.timeLog('a')
+for (i=0; i<key.length; i++) {
+	if(links[i]=="0")  {
+		m=[key[i],parents[i],names[i]];
+	} else {
+		m=[key[i],parents[i],names[i],'items.php?id='+id[i]];
+	}
+	d.add(...m);
+}
+console.timeLog('a');
 document.write("</div>");
-console.timeEnd('a')
+
+d.draw(document.getElementById('dtree-top1'));
+console.timeEnd('a');
 
 </script>
 </body></html>

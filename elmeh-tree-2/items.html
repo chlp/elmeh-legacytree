@@ -1,0 +1,26 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf8">
+<script type="text/javascript" src="dtree.js"></script>
+<script type="text/javascript" src="data.js"></script>
+</head><body>
+
+<script type="text/javascript">
+console.time('a')
+document.write("<div class=dtree>");
+d = new dTree('d');
+d.add(4821,-1,'Продукция');
+i=0;
+while(i<key.length)	{
+if(links[i]=="0")   m=key[i]+","+parents[i]+",'"+names[i]+"',''"; else m=key[i]+","+parents[i]+",'"+names[i]+"','items.php?id="+id[i]+"'";
+
+eval("d.add("+m+");");
+i++;
+					}
+console.timeLog('a')
+
+document.write(d);
+console.timeLog('a')
+document.write("</div>");
+console.timeEnd('a')
+
+</script>
+</body></html>

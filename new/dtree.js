@@ -318,13 +318,13 @@ dTree.prototype.node = function(node, nodeId) {
 
 
 dTree.prototype.calcIndent = function(node) {
-	// node=d.aNodesMap[21932];
 	indent=[];
 	tmp=node;
-	while(tmp.pid !== -1) {
+	while (tmp.pid !== -1) {
 	  indent.push(1);
 	  tmp = d.aNodesMap[tmp.pid];
 	}
+	indent.pop();
 	return indent;
 }
 
